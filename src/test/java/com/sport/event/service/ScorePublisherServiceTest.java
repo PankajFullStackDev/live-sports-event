@@ -9,10 +9,15 @@ import org.apache.kafka.common.errors.TimeoutException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -24,21 +29,52 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = ScorePublisherServiceTest.Config.class)
 class ScorePublisherServiceTest {
 
-    @Mock
+    @EnableRetry
+    @Configuration
+    static class Config {
+
+        @Bean
+        @SuppressWarnings("unchecked")
+        KafkaTemplate<String, String> kafkaTemplate() {
+            return Mockito.mock(KafkaTemplate.class);
+        }
+
+        @Bean
+        ObjectMapper objectMapper() {
+            return new ObjectMapper();
+        }
+
+        @Bean
+        ScoreEventProperties scoreEventProperties() {
+            ScoreEventProperties properties = new ScoreEventProperties();
+            properties.setKafkaTopic("event-scores");
+            properties.setPublishRetryAttempts(3);
+            properties.setPublishRetryBackoff(Duration.ZERO);
+            return properties;
+        }
+
+        @Bean
+        ScorePublisherService scorePublisherService(
+                KafkaTemplate<String, String> kafkaTemplate,
+                ObjectMapper objectMapper,
+                ScoreEventProperties properties) {
+            return new ScorePublisherService(kafkaTemplate, objectMapper, properties);
+        }
+    }
+
+    @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
 
+    @Autowired
     private ScorePublisherService scorePublisherService;
 
     @BeforeEach
-    void setUp() {
-        ScoreEventProperties properties = new ScoreEventProperties();
-        properties.setKafkaTopic("event-scores");
-        properties.setPublishRetryAttempts(3);
-        properties.setPublishRetryBackoff(Duration.ZERO);
-        scorePublisherService = new ScorePublisherService(kafkaTemplate, new ObjectMapper(), properties);
+    void resetMocks() {
+        Mockito.reset(kafkaTemplate);
     }
 
     @Test
@@ -112,4 +148,3 @@ class ScorePublisherServiceTest {
         return properties;
     }
 }
-

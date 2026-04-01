@@ -1,5 +1,6 @@
 package com.sport.event.controller;
 
+import com.sport.event.dto.EventStatusResponse;
 import com.sport.event.service.ScoreEventService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Set;
 
+import static com.sport.event.constant.EventStatusConstants.SCORE_UPDATES_STARTED_ACTION;
+import static com.sport.event.constant.EventStatusConstants.SCORE_UPDATES_STARTED_MESSAGE;
+import static com.sport.event.constant.EventStatusConstants.SCORE_UPDATES_STOPPED_ACTION;
+import static com.sport.event.constant.EventStatusConstants.SCORE_UPDATES_STOPPED_MESSAGE;
 import static org.mockito.Mockito.mock;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -33,6 +38,9 @@ class ScoreEventControllerTest {
 
     @Test
     void updateStatusAcceptsValidPayload() throws Exception {
+        when(scoreEventService.updateStatus(any()))
+                .thenReturn(new EventStatusResponse("evt-200", SCORE_UPDATES_STARTED_ACTION, SCORE_UPDATES_STARTED_MESSAGE));
+
         mockMvc.perform(post("/events/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -43,13 +51,16 @@ class ScoreEventControllerTest {
                                 """))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.eventId").value("evt-200"))
-                .andExpect(jsonPath("$.action").value("polling-started"));
+                .andExpect(jsonPath("$.action").value(SCORE_UPDATES_STARTED_ACTION));
 
         verify(scoreEventService).updateStatus(any());
     }
 
     @Test
     void updateStatusReturnsStoppedActionWhenEventIsNotLive() throws Exception {
+        when(scoreEventService.updateStatus(any()))
+                .thenReturn(new EventStatusResponse("evt-200", SCORE_UPDATES_STOPPED_ACTION, SCORE_UPDATES_STOPPED_MESSAGE));
+
         mockMvc.perform(post("/events/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -60,7 +71,7 @@ class ScoreEventControllerTest {
                                 """))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.eventId").value("evt-200"))
-                .andExpect(jsonPath("$.action").value("polling-stopped"));
+                .andExpect(jsonPath("$.action").value(SCORE_UPDATES_STOPPED_ACTION));
 
         verify(scoreEventService).updateStatus(any());
     }
@@ -101,5 +112,3 @@ class ScoreEventControllerTest {
                 .andExpect(jsonPath("$.liveEventCount").value(2));
     }
 }
-
-

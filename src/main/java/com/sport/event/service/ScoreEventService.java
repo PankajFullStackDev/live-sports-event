@@ -60,6 +60,10 @@ public class ScoreEventService {
 		}
 
 		String eventId = eventStatusRequest.getEventId();
+		if (!StringUtils.hasText(eventId)) {
+			throw new IllegalArgumentException("eventId must not be blank");
+		}
+
 		Boolean status = eventStatusRequest.getIsLive();
 
 		if (status) {
