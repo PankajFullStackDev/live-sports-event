@@ -203,7 +203,8 @@ Expected response:
 ```json
 {
   "eventId": "1234",
-  "action": "polling-started"
+  "action": "score-updates-started",
+  "message": "Live score updates started for this event."
 }
 ```
 
@@ -222,7 +223,8 @@ Expected response:
 ```json
 {
   "eventId": "1234",
-  "action": "polling-stopped"
+  "action": "score-updates-stopped",
+  "message": "Live score updates stopped for this event."
 }
 ```
 
