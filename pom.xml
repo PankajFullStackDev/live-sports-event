@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.sport</groupId>
-	<artifactId>event</artifactId>
+	<artifactId>live-sports-event</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
 	<description/>
